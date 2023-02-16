@@ -18,3 +18,4 @@ use Illuminate\Support\Facades\Http;
 
 Route::get('/', [siteController::class, 'index']);
 Route::get('/new-collection', [siteController::class, 'createCollection'])->name('create-collection');
+Route::post('/new-collection', [siteController::class, 'storeCollection'])->name('store-collection');
