@@ -5,16 +5,27 @@
     @csrf
     <div>
         <label for="name">Collection name</label>
-        <input type="text" name="title">
+        <input type="text" name="title" value="{{ old('title') }}">
+        @error('title')
+        <span>{{ $errors->first('title') }}</span>
+        @enderror
+
     </div>
     <div>
         <label for="name">Description</label>
         <input id="drescription" type="hidden" name="drescription">
         <trix-editor input="drescription"></trix-editor>
+        @error('drescription')
+            <span>{{ $errors->first('drescription') }}</span>
+        @enderror
     </div>
     <div>
         <label for="name">Collection featured Image</label>
         <input type="file" name="featured_image" id="featured_image">
+        <span>* Image max size: 1500MB</span>
+        @error('featured_image')
+            <span>{{ $errors->first('featured_image') }}</span>
+        @enderror
     </div>
     <div>
         <button type="submit">Create Collection</button>
