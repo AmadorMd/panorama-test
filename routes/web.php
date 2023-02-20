@@ -16,7 +16,8 @@ use Illuminate\Support\Facades\Http;
 |
 */
 
-Route::get('/', [siteController::class, 'index']);
+Route::get('/', [siteController::class, 'index'])->name('home');
 Route::get('/new-collection', [siteController::class, 'createCollection'])->name('create-collection');
+Route::post('/collection-details', [siteController::class, 'showCollection'])->name('show-collection');
 Route::post('/new-collection', [siteController::class, 'storeCollection'])->name('store-collection');
 Route::post('/delete-collection', [siteController::class, 'DeleteCollectionByID'])->name('delete-collection');

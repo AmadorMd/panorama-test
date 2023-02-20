@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use GuzzleHttp\Psr7\Query;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
 
 class siteController extends Controller
@@ -53,12 +54,14 @@ class siteController extends Controller
             $temp[] = ' descriptionHtml: "'.$request->drescription.'"';
         if($request->hasFile('featured_image')) {
             $tempImage = $request->file('featured_image');
+            $imageOriginalPath = $tempImage->getRealPath()."/".$tempImage->getClientOriginalName();
+            
             $imageStage = 'mutation {stagedUploadsCreate(input: [{
                 fileSize: "'.$tempImage->getSize().'",
                 filename: "'.$tempImage->getClientOriginalName().'",
                 httpMethod: POST,
                 mimeType: "'.$tempImage->getClientMimeType().'",
-                resource: IMAGE
+                resource: COLLECTION_IMAGE
             }]){
                 stagedTargets {
                     url
@@ -78,38 +81,64 @@ class siteController extends Controller
             ])->post(env('GRAPHQL_URL'), [
                 'query' => $imageStage
             ])->json();
-            $imageStageUrl = $imageStageResponse['data']['stagedUploadsCreate']['stagedTargets'][0]['resourceUrl'];
             
-            $temp[] = 'image: {altText: "'.$request->title.'", src: "'.$imageStageUrl.'"}';
+            $target = $imageStageResponse['data']['stagedUploadsCreate']['stagedTargets'][0];
+            $uploadUrl = $target['url'];
+            $parameters = $target['parameters'];
+            $resourceUrl = $target['resourceUrl'];
+            foreach($parameters as $param){
+                $postParameters[$param['name']] = $param['value'];
+            }
+            
+            $mergePostParameters = array_merge($postParameters, ['file'=> file_get_contents($tempImage)]);
+            //Upload Stage Image to Shopify
+            //$result = Http::asForm()->post($uploadUrl, $mergePostParameters );
+            $ch = curl_init();
+
+            curl_setopt($ch, CURLOPT_URL, $uploadUrl);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch, CURLOPT_POST, 1);
+
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $mergePostParameters);
+
+            $result = simplexml_load_string(curl_exec($ch));
+            if (curl_errno($ch)) {
+                dd("error");
+            }
+            curl_close($ch);
+            $convertedResponse = json_decode(json_encode(($result)), true);
+            $uploadedImageTempUrl = $convertedResponse['Location'];
+            
+            $temp[] = 'image: {altText: "'.$request->title.'", src: "'.$uploadedImageTempUrl.'"}';
         }
-        $temp[] = 'ruleSet: {
-            appliedDisjunctively: true,
-            rules: [
-                {
-                column: TITLE,
-                condition: "T-Shirts",
-                relation: CONTAINS
-                }
-            ]
-            }';
+        // $temp[] = 'ruleSet: {
+        //     appliedDisjunctively: true,
+        //     rules: [
+        //         {
+        //         column: TITLE,
+        //         condition: "T-Shirts",
+        //         relation: CONTAINS
+        //         }
+        //     ]
+        //     }';
         
         $productCreateMutation = 'collectionCreate (input: {'.implode(",", $temp).'}) { 
-                collection { id title descriptionHtml handle sortOrder }
+                collection { id title descriptionHtml handle sortOrder image { src } }
                 userErrors { field message }
             }';
         
         $query = 'mutation { '.$productCreateMutation.' }';
-      $response = Http::withHeaders([
+        $response = Http::withHeaders([
             'X-Shopify-Access-Token' => env('SHOPIFY_API_KEY'),
         ])->post(env('GRAPHQL_URL'), [
             'query' => $query
         ])->json();
-        dd($response);  
+       
         //$id = "gid://shopify/Collection/272494264362"; //temporal
-        $id = $response['data']['collectionCreate']['collection']['id'];
+        $newCollectionId = $response['data']['collectionCreate']['collection']['id'];
         
         $publisCollectionMutation = 'mutation { 
-            publishablePublish(id: "'.$id.'", input: { publicationId: "gid://shopify/Publication/13775306794" })
+            publishablePublish(id: "'.$newCollectionId.'", input: { publicationId: "gid://shopify/Publication/13775306794" })
             {
                 publishable {
                   availablePublicationCount
@@ -139,6 +168,58 @@ class siteController extends Controller
                 'query' => $publisCollectionMutation
             ])->json(); 
         dd($response);
+        //update recente collection for add the image
+        
+        $updateCollectionMutation = 'mutation {
+            collectionUpdate(input: {
+                id: "'.$newCollectionId.'",
+                image: {src: "'.$uploadedImageTempUrl.'"}
+            }){
+                collection {
+                    id
+                    title
+                    image {
+                        src
+                        altText
+                    }
+                }
+                userErrors {
+                    field
+                    message
+                  }      
+            }
+        }';
+        
+        // $responseUpdateCollectionImage = Http::withHeaders([
+        //     'X-Shopify-Access-Token' => env('SHOPIFY_API_KEY'),
+        // ])->post(env('GRAPHQL_URL'), [
+        //     'query' => $updateCollectionMutation
+        // ])->json();
+        //dd($responseUpdateCollectionImage);
+    }
+    public function showCollection(Request $request){
+        $id = $request->id;
+        $query = 'query {
+            collection(id: "'.$id.'"){
+                id
+                title
+                descriptionHtml
+                handle
+                updatedAt
+                productsCount
+                image {
+                    src
+                }
+            }
+        }';
+        $response = Http::withHeaders([
+            'X-Shopify-Access-Token' => env('SHOPIFY_API_KEY'),
+        ])->post(env('GRAPHQL_URL'), [
+            'query' => $query
+        ])->json(); 
+        $collection = $response['data']['collection'];
+        
+        return view('collection.details', compact('collection'));
     }
     public function DeleteCollectionByID(Request $request){
         $id = $request->id;
@@ -155,12 +236,13 @@ class siteController extends Controller
           }';
         $query = ' mutation { '.$vars.' }';
        
-        $response = Http::withHeaders([
+        Http::withHeaders([
             'X-Shopify-Access-Token' => env('SHOPIFY_API_KEY'),
         ])->post(env('GRAPHQL_URL'), [
             'query' => $query
         ])->json();   
-        dd($response);
+        
+        return redirect()->back();
     
     }
 }

@@ -26,7 +26,12 @@
                     </a>
                 </td>
                 <td>
-                    <button>View details</button>
+                    <form action="{{ route('show-collection') }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="id" value="{{ $collection['node']['id'] }}">
+                        <button type="submit">View details</button>
+                    </form>
+                    
                     <form action="{{ route('delete-collection') }}" method="POST">
                         @csrf
                         <input type="hidden" name="id" value="{{ $collection['node']['id'] }}">
