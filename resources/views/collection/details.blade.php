@@ -1,5 +1,6 @@
 @extends('layouts.app')
 @section('content')
+    <h1>Editing collection</h1>
     <h2>Title: {{ $collection['title'] }}</h2>
     <p>
         {!! $collection['descriptionHtml'] !!}

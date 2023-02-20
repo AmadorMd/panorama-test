@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('content')
-<h1>Administrador Panorama</h1>
-    <h2>Shopify Collections</h2>
+<h1>Panorama Shopify Admin</h1>
+    <h2>Collections</h2>
     <a href="{{ route('create-collection') }}">Create a Collection</a>
     <table>
         <thead>

@@ -22,7 +22,7 @@
     <div>
         <label for="name">Collection featured Image</label>
         <input type="file" name="featured_image" id="featured_image">
-        <span>* Image max size: 1500MB</span>
+        <span>* The image must has the dimensions 4472px by 4472px</span>
         @error('featured_image')
             <span>{{ $errors->first('featured_image') }}</span>
         @enderror
