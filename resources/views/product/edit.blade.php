@@ -1,9 +1,10 @@
 @extends('layouts.app')
 @section('content')
 <h2>Editing Product: {{ $product['title'] }}</h2>
-<form action="{{ route('update-product') }}" method="POST" enctype="multipart/form-data">
+<form action="{{ route('update-product', ['handle' => $handle]) }}" method="POST" enctype="multipart/form-data">
     @csrf
     @method('PUT')
+    <input type="hidden" name="id" value="{{ $product['id'] }}">
     <div>
         <label for="title">Product title</label>
         <input type="text" name="title" value="{{ old('title', $product['title']) }}">
@@ -92,7 +93,7 @@
         </div>
     @endforeach
     <div>
-        <button type="submit">Create Product</button>
+        <button type="submit">update Product</button>
     </div>
 </form>
 @endsection

@@ -98,7 +98,51 @@ class productController extends Controller
         if(isset($response['data'])){
             $product = $response['data']['productByHandle'];
             $variants = $product['variants']['edges'];
-            return view('product.edit', compact('product', 'variants'));
+            return view('product.edit', compact('product', 'variants', 'handle'));
+        }else{
+            dd($response['errors']);
+        }
+        
+    }
+    public function updateProduct(Request $request, $handle){
+        $request->validate([
+            'title' => 'required|string|min:5',
+            'product_type' => 'required|string|min:5',
+            'vendor' => 'required|string|min:5',
+            'tags' => 'required|string|min:5',
+            'status' => 'required',
+            'description' => 'required|string|min:5',
+        ]);
+        $id = $request->id;
+        $compareAtPrice = isset($request->compare_at_price[0])?isset($request->compare_at_price[0]): 0;
+        $query = 'productUpdate(input: { 
+            id: "'.$id.'",
+            title: "'.$request->title.'", 
+            productType: "'.$request->product_type.'", 
+            vendor: "'.$request->vendor.'",
+            tags: "'.$request->tags.'",
+            status: '.$request->status.',
+            descriptionHtml: "'.addslashes($request->description).'",
+            variants: [
+                {
+                    title: "'.$request->variant_title[0].'",
+                    price: "'.$request->price[0].'",
+                    compareAtPrice: "'.$compareAtPrice.'",
+                    inventoryItem: {cost: "'.$request->price[0].'", tracked: true},
+                    taxable: false,
+                    inventoryQuantities: {availableQuantity: '.$request->inventory_quantities[0].', locationId: "gid://shopify/Location/11508449322"}
+                }
+            ]
+        }){
+            product {
+                id
+            }
+
+        }';
+        $queryMutation = $this->mutation($query);
+        $response = $this->graphqlSendRequest($queryMutation);
+        if(isset($response['data'])){
+            return redirect()->back();
         }else{
             dd($response['errors']);
         }
