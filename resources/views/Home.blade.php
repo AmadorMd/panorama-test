@@ -17,6 +17,7 @@
             @foreach ($collections as $collection)
            
             <tr>
+                <td>{{ $loop->index + 1 }}</td>
                 <td>{{ $collection['node']['id'] }}</td>
                 <td>{{ $collection['node']['title'] }}</td>
                 <td>{{ $collection['node']['productsCount'] }}</td>

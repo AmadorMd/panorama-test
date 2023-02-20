@@ -10,7 +10,7 @@ class siteController extends Controller
     public function index(){
         $query = '
         query {
-            collections(first: 15) {
+            collections(first: 50) {
                 edges {
                     node {
                         id
@@ -119,15 +119,12 @@ class siteController extends Controller
         $query = '
         {
             collectionByHandle(handle: "'.$handle.'") {
-              description(truncateAt: 300)
               descriptionHtml
               handle
               updatedAt
               productsCount
               image {
-                altText
                 src
-                transformedSrc(maxHeight: 1000, maxWidth: 2048, crop: CENTER)
               }
               title
               products(first: 24) {
@@ -135,7 +132,6 @@ class siteController extends Controller
                   hasNextPage
                 }
                 edges {
-                  cursor
                   node {
                     handle
                     id
@@ -144,6 +140,7 @@ class siteController extends Controller
                     title
                     totalInventory
                     vendor
+                    status
                   }
                 }
               }
@@ -152,8 +149,11 @@ class siteController extends Controller
         $response = $this->graphqlSendRequest($query);
         
         $collection = $response['data']['collectionByHandle'];
-        
-        return view('collection.details', compact('collection'));
+        $products = [];
+        if($collection['productsCount'] > 0){
+            $products = $collection['products']['edges'];
+        }
+        return view('collection.details', compact('collection', 'products'));
     }
     public function DeleteCollectionByID(Request $request){
         $id = $request->id;

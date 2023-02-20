@@ -18,14 +18,37 @@
     <table>
         <thead>
             <tr>
-                <td>ID</td>
-                <td>Title</td>
-                <td>Shop url</td>
-                <td>Actions</td>
+                <th>Title</th>
+                <th>Product Type</th>
+                <th>Total Inventory</th>
+                <th>Tags</th>
+                <th>Vendor</th>
+                <th>Status</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
-            
+            @foreach ($products as $product)
+                <tr>
+                    <td>{{ $product['node']['title'] }}</td>
+                    <td>{{ $product['node']['productType'] }}</td>
+                    <td>{{ $product['node']['totalInventory'] }}</td>
+                    <td>{{ implode(",", $product['node']['tags']) }}</td>
+                    <td>{{ $product['node']['vendor'] }}</td>
+                    <td>{{ $product['node']['status'] }}</td>
+                    <td>
+                        <a target="_blank" href="{{ env('SHOP_URL')."/products".$product['node']['handle'] }}">view on store</a>
+                        <a href="{{ route('edit-product', ['handle' => $product['node']['handle']]) }}">Edit Product</a>
+                        
+                        <form action="{{ route('delete-product') }}" method="POST">
+                            @csrf
+                            <input type="hidden" name="id" value="{{ $product['node']['id'] }}">
+                            <button>Delete Product</button>
+                        </form>
+                        
+                    </td>
+                </tr>
+            @endforeach
         </tbody>
     </table>
     <a href="{{ route('home') }}">All collections</a>

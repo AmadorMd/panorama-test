@@ -3,6 +3,7 @@
 <h2>Create Product</h2>
 <form action="{{ route('store-product') }}" method="POST" enctype="multipart/form-data">
     @csrf
+    <input type="hidden" name="collectionID" value="{{ $collectionID }}">
     <div>
         <label for="title">Product title</label>
         <input type="text" name="title" value="{{ old('title') }}">
@@ -49,18 +50,18 @@
     </div>
     <div>
         <label for="name">Description</label>
-        <input id="drescription" type="hidden" name="drescription" value="{{ old('description') }}">
-        <trix-editor input="drescription"></trix-editor>
-        @error('drescription')
-            <span>{{ $errors->first('drescription') }}</span>
+        <input id="description" type="hidden" name="description" value="{{ old('description') }}">
+        <trix-editor input="description"></trix-editor>
+        @error('description')
+            <span>{{ $errors->first('description') }}</span>
         @enderror
     </div>
     <div><h3>Variant details</h3></div>
     <div>
-        <label for="variant-title">Title</label>
-        <input type="text" name="variant-title[]" value="{{ old('variant-title') }}">
-        @error('variant-title')
-        <span>{{ $errors->first('variant-title') }}</span>
+        <label for="variant_title">Title</label>
+        <input type="text" name="variant_title[]" value="{{ old('variant_title') }}">
+        @error('variant_title')
+        <span>{{ $errors->first('variant_title') }}</span>
         @enderror
 
     </div>
@@ -73,18 +74,18 @@
 
     </div>
     <div>
-        <label for="compare-at-price">Compare at price</label>
-        <input type="text" name="compare-at-price[]" value="{{ old('compare-at-price') }}">
-        @error('compare-at-price')
-        <span>{{ $errors->first('compare-at-price') }}</span>
+        <label for="compare_at_price">Compare at price</label>
+        <input type="text" name="compare_at_price[]" value="{{ old('compare_at_price') }}">
+        @error('compare_at_price')
+        <span>{{ $errors->first('compare_at_price') }}</span>
         @enderror
 
     </div>
     <div>
-        <label for="inventory-quantities">Inventory quantities</label>
-        <input type="number" name="inventory-quantities[]" value="{{ old('inventory-quantities') }}">
-        @error('inventory-quantities')
-        <span>{{ $errors->first('inventory-quantities') }}</span>
+        <label for="inventory_quantities">Inventory quantities</label>
+        <input type="number" name="inventory_quantities[]" value="{{ old('inventory_quantities') }}">
+        @error('inventory_quantities')
+        <span>{{ $errors->first('inventory_quantities') }}</span>
         @enderror
 
     </div>

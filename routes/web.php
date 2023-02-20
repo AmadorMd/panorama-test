@@ -26,3 +26,6 @@ Route::post('/delete-collection', [siteController::class, 'DeleteCollectionByID'
 //Products
 Route::get('/{collectionHandle}/new-product', [productController::class, 'createView'])->name('create-product');
 Route::post('/products/new-product', [productController::class, 'createProduct'])->name('store-product');
+Route::post('/products/delete', [productController::class, 'deleteProduct'])->name('delete-product');
+Route::get('/products/{handle}/edit', [productController::class, 'editProduct'])->name('edit-product');
+Route::put('/products/{handle}/update', [productController::class, 'updateProduct'])->name('update-product');

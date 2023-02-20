@@ -22,25 +22,106 @@ class productController extends Controller
         return view('product.create', compact('collectionID'));
     }
     public function createProduct(Request $request){
-        dd($request->all());
-       $query = '
-        productCreate(input: {
-            title: "Sweet new product", productType: "Snowboard", vendor: "JadedPixel", collectionsToJoin: "'.$collectionID.'"
-        }){
-            product {
-                id
+       
+        $request->validate([
+            'title' => 'required|string|min:5',
+            'product_type' => 'required|string|min:5',
+            'vendor' => 'required|string|min:5',
+            'tags' => 'required|string|min:5',
+            'status' => 'required',
+            'description' => 'required|string|min:5',
+        ]);
+        $collectionID = $request->collectionID;
+        $compareAtPrice = isset($request->compare_at_price[0])?isset($request->compare_at_price[0]): 0;
+        $query = '
+            productCreate(input: {
+                title: "'.$request->title.'", 
+                productType: "'.$request->product_type.'", 
+                vendor: "'.$request->vendor.'", 
+                collectionsToJoin: "'.$collectionID.'",
+                tags: "'.$request->tags.'",
+                status: '.$request->status.',
+                descriptionHtml: "'.addslashes($request->description).'",
+                variants: [
+                    {
+                        title: "'.$request->variant_title[0].'",
+                        price: "'.$request->price[0].'",
+                        compareAtPrice: "'.$compareAtPrice.'",
+                        inventoryItem: {cost: "'.$request->price[0].'", tracked: true},
+                        taxable: false,
+                        inventoryQuantities: {availableQuantity: '.$request->inventory_quantities[0].', locationId: "gid://shopify/Location/11508449322"}
+                    }
+                ]
+            }){
+                product {
+                    id
+                }
+                userErrors {
+                    field
+                    message
+                }
             }
-            userErrors {
-                field
-                message
-            }
+        ';
+        $mutationQuery = $this->mutation($query);
+        $createProductResponse = $this->graphqlSendRequest($mutationQuery);
+        if(isset($createProductResponse['data'])){
+            $productId = $createProductResponse['data']['productCreate']['product']['id'];
+            $publisProduct = $this->publish($productId);
+        }else{
+            dd($createProductResponse);
         }
-       ';
-       $mutationQuery = $this->mutation($query);
-       $createProductResponse = $this->graphqlSendRequest($mutationQuery);
-       $productId = $createProductResponse['data']['productCreate']['product']['id'];
-       $publisProduct = $this->publish($productId);
-       dd($publisProduct);
+        return redirect()->route('home');
+    }
+    public function editProduct($handle){
+        $query = 'query{
+            productByHandle(handle: "'.$handle.'"){
+                id
+                title
+                descriptionHtml
+                productType
+                vendor
+                tags
+                status
+                variants(first:5){
+                    edges{
+                        node{
+                            price
+                            title
+                            compareAtPrice
+                            inventoryQuantity
+                        }
+                    }
+                }
+            }
+        }';
+        $response = $this->graphqlSendRequest($query);
+        if(isset($response['data'])){
+            $product = $response['data']['productByHandle'];
+            $variants = $product['variants']['edges'];
+            return view('product.edit', compact('product', 'variants'));
+        }else{
+            dd($response['errors']);
+        }
+        
+    }
+    public function deleteProduct(Request $request){
+        $id = $request->id;
+        $query = '
+            productDelete(input: {id: "'.$id.'"}){
+                deletedProductId
+                userErrors {
+                    field
+                    message
+                  }
+            }
+        ';
+        $mutationQuery = $this->mutation($query);
+        $response = $this->graphqlSendRequest($mutationQuery);
+        if(empty($response['data']['productDelete']['userErrors'])){
+            return redirect()->back();
+        }else{
+            return $response['data']['productDelete']['userErrors'];
+        }
     }
     
 }
