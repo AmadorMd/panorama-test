@@ -1,74 +1,35 @@
 <?php
 
 namespace App\Http\Controllers;
-
-use GuzzleHttp\Psr7\Query;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Storage;
 
 class siteController extends Controller
 {
-    public function graphlqlSendRequest($query){
-        return Http::withHeaders([
-            'X-Shopify-Access-Token' => env('SHOPIFY_API_KEY'),
-        ])->post(env('GRAPHQL_URL'), [
-            'query' => $query,
-        ])->json();
-    }
+    
     public function index(){
-        $query = <<<QUERY
+        $query = '
         query {
-        collections(first: 15) {
-            edges {
-            node {
-                id
-                title
-                handle
-                updatedAt
-                productsCount
-                sortOrder
+            collections(first: 15) {
+                edges {
+                    node {
+                        id
+                        title
+                        handle
+                        updatedAt
+                        productsCount
+                        sortOrder
+                    }
+                }
             }
-            }
-        }
-        }
-        QUERY;
-        $collections = $this->graphlqlSendRequest($query)['data']['collections']['edges'];
+        }';
+        $collections = $this->graphqlSendRequest($query)['data']['collections']['edges'];
         return view('Home', compact('collections'));
     }
     public function createCollection(){
         return view('create-collection');
     }
-    public function stagedUploadsCreate($fileSize, $filename, $httpMethod, $mimeType, $resource){
-        $query = 'stagedUploadsCreate(input: [{
-            fileSize: "'.$fileSize.'",
-            filename: "'.$filename.'",
-            httpMethod: '.$httpMethod.',
-            mimeType: "'.$mimeType.'",
-            resource: '.$resource.'
-        }]){
-            stagedTargets {
-                url
-                resourceUrl
-                parameters {
-                  name
-                  value
-                }
-            }
-            userErrors {
-                field
-                message
-            }
-        }';
-        return $this->mutation($query);
-    }
-    public function mutation($query){
-        $mutation = 'mutation {
-            '.$query.'
-        }';
-        return $mutation;
-    }
+    
     public function storeCollection(Request $request){
         
         $request->validate([
@@ -87,7 +48,7 @@ class siteController extends Controller
             $imageMime = $tempImage->getClientMimeType();
             $imageStage = $this->stagedUploadsCreate($imageSize, $imageName, 'POST', $imageMime, 'COLLECTION_IMAGE');
             
-            $imageStageResponse = $this->graphlqlSendRequest($imageStage);
+            $imageStageResponse = $this->graphqlSendRequest($imageStage);
             $target = $imageStageResponse['data']['stagedUploadsCreate']['stagedTargets'][0];
             $uploadUrl = $target['url'];
             $parameters = $target['parameters'];
@@ -122,28 +83,11 @@ class siteController extends Controller
         
         $collectionMutationQuery = $this->mutation($createCollectionQuery);
         
-        $responseCollectionMutation = $this->graphlqlSendRequest($collectionMutationQuery);
+        $responseCollectionMutation = $this->graphqlSendRequest($collectionMutationQuery);
     
         $recentCollectionId = $responseCollectionMutation['data']['collectionCreate']['collection']['id'];
         
-        $publishCollectionQuery = 'publishablePublish( 
-            id: "'.$recentCollectionId.'", 
-            input: { publicationId: "gid://shopify/Publication/13775306794" })
-        {
-            publishable {
-              availablePublicationCount
-              publicationCount
-            }
-            shop {
-              publicationCount
-            }
-            userErrors {
-              field
-              message
-            }
-          }';
-        $publishCollectionMutation = $this->mutation($publishCollectionQuery);
-        $publishCollectionResponse = $this->graphlqlSendRequest($publishCollectionMutation);
+        $publishCollectionResponse = $this->publish($recentCollectionId);
         $userErrors = $publishCollectionResponse['data']['publishablePublish']['userErrors'];
         if(empty($userErrors)){
             return redirect()->route('home');
@@ -171,23 +115,43 @@ class siteController extends Controller
         }';
 
     }
-    public function showCollection(Request $request){
-        $id = $request->id;
-        $query = 'query {
-            collection(id: "'.$id.'"){
-                id
-                title
-                descriptionHtml
-                handle
-                updatedAt
-                productsCount
-                image {
-                    src
+    public function showCollection($handle){
+        $query = '
+        {
+            collectionByHandle(handle: "'.$handle.'") {
+              description(truncateAt: 300)
+              descriptionHtml
+              handle
+              updatedAt
+              productsCount
+              image {
+                altText
+                src
+                transformedSrc(maxHeight: 1000, maxWidth: 2048, crop: CENTER)
+              }
+              title
+              products(first: 24) {
+                pageInfo {
+                  hasNextPage
                 }
+                edges {
+                  cursor
+                  node {
+                    handle
+                    id
+                    productType
+                    tags
+                    title
+                    totalInventory
+                    vendor
+                  }
+                }
+              }
             }
-        }';
-        $response = $this->graphlqlSendRequest($query);
-        $collection = $response['data']['collection'];
+          }';
+        $response = $this->graphqlSendRequest($query);
+        
+        $collection = $response['data']['collectionByHandle'];
         
         return view('collection.details', compact('collection'));
     }
@@ -206,7 +170,7 @@ class siteController extends Controller
           }';
         $query = $this->mutation($vars);
        
-        $this->graphlqlSendRequest($query);  
+        $this->graphqlSendRequest($query);  
         return redirect()->back();
     
     }

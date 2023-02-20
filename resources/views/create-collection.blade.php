@@ -4,7 +4,7 @@
 <form action="{{ route('store-collection') }}" method="POST" enctype="multipart/form-data">
     @csrf
     <div>
-        <label for="name">Collection name</label>
+        <label for="name">Collection title</label>
         <input type="text" name="title" value="{{ old('title') }}">
         @error('title')
         <span>{{ $errors->first('title') }}</span>
@@ -13,7 +13,7 @@
     </div>
     <div>
         <label for="name">Description</label>
-        <input id="drescription" type="hidden" name="drescription">
+        <input id="drescription" type="hidden" name="drescription" value="{{ old('description') }}">
         <trix-editor input="drescription"></trix-editor>
         @error('drescription')
             <span>{{ $errors->first('drescription') }}</span>
