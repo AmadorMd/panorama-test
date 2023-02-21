@@ -18,5 +18,6 @@
         </ul>
     </head>
     @yield('content')
+    @yield('scripts')
 </body>
 </html>

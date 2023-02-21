@@ -56,41 +56,66 @@
             <span>{{ $errors->first('description') }}</span>
         @enderror
     </div>
-    <div><h3>Variant details</h3></div>
     <div>
-        <label for="variant_title">Title</label>
-        <input type="text" name="variant_title[]" value="{{ old('variant_title') }}">
-        @error('variant_title')
-        <span>{{ $errors->first('variant_title') }}</span>
-        @enderror
-
+        <h3>Variant details</h3>
+        <button id="addVariant">add variant</button>
     </div>
-    <div>
-        <label for="price">Price</label>
-        <input type="text" name="price[]" value="{{ old('price') }}">
-        @error('price')
-        <span>{{ $errors->first('price') }}</span>
-        @enderror
-
-    </div>
-    <div>
-        <label for="compare_at_price">Compare at price</label>
-        <input type="text" name="compare_at_price[]" value="{{ old('compare_at_price') }}">
-        @error('compare_at_price')
-        <span>{{ $errors->first('compare_at_price') }}</span>
-        @enderror
-
-    </div>
-    <div>
-        <label for="inventory_quantities">Inventory quantities</label>
-        <input type="number" name="inventory_quantities[]" value="{{ old('inventory_quantities') }}">
-        @error('inventory_quantities')
-        <span>{{ $errors->first('inventory_quantities') }}</span>
-        @enderror
-
+    <div id="variants">
+        <div class="variant-info">
+            <div>
+                <label for="variant_title">Title</label>
+                <input type="text" name="variant_title[]" value="{{ old('variant_title') }}">
+                @error('variant_title')
+                <span>{{ $errors->first('variant_title') }}</span>
+                @enderror
+        
+            </div>
+            <div>
+                <label for="price">Price</label>
+                <input type="text" name="price[]" value="{{ old('price') }}">
+                @error('price')
+                <span>{{ $errors->first('price') }}</span>
+                @enderror
+        
+            </div>
+            <div>
+                <label for="compare_at_price">Compare at price</label>
+                <input type="text" name="compare_at_price[]" value="{{ old('compare_at_price') }}">
+                @error('compare_at_price')
+                <span>{{ $errors->first('compare_at_price') }}</span>
+                @enderror
+        
+            </div>
+            <div>
+                <label for="inventory_quantities">Inventory quantities</label>
+                <input type="number" name="inventory_quantities[]" value="{{ old('inventory_quantities') }}">
+                @error('inventory_quantities')
+                <span>{{ $errors->first('inventory_quantities') }}</span>
+                @enderror
+        
+            </div>
+        </div>
     </div>
     <div>
         <button type="submit">Create Product</button>
     </div>
 </form>
+@endsection
+@section('scripts')
+<script>
+    let addButton = document.getElementById('addVariant');
+    let count = 0, varians = [];
+    let variantContainer = document.getElementById('variants');
+    addButton.addEventListener("click", function(e){
+        e.preventDefault();
+        let variantHtml = '<hr><div class="variant-info">'+
+                            '<div><label for="variant_title">Title</label><input type="text" name="variant_title[]" ></div>'+
+                            '<div><label for="price">Price</label> <input type="text" name="price[]"></div>'+
+                            '<div><label for="compare_at_price">Compare at price</label><input type="text" name="compare_at_price[]"></div>'+
+                            '<div><label for="inventory_quantities">Inventory quantities</label><input type="number" name="inventory_quantities[]"></div>'+
+                            '</div>';
+                            variantContainer.innerHTML += variantHtml;
+        
+    });
+</script>
 @endsection

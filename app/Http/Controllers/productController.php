@@ -32,7 +32,7 @@ class productController extends Controller
             'description' => 'required|string|min:5',
         ]);
         $collectionID = $request->collectionID;
-        $compareAtPrice = isset($request->compare_at_price[0])?isset($request->compare_at_price[0]): 0;
+        $variants = $this->setVariantProductQuery($request);
         $query = '
             productCreate(input: {
                 title: "'.$request->title.'", 
@@ -42,16 +42,7 @@ class productController extends Controller
                 tags: "'.$request->tags.'",
                 status: '.$request->status.',
                 descriptionHtml: "'.addslashes($request->description).'",
-                variants: [
-                    {
-                        title: "'.$request->variant_title[0].'",
-                        price: "'.$request->price[0].'",
-                        compareAtPrice: "'.$compareAtPrice.'",
-                        inventoryItem: {cost: "'.$request->price[0].'", tracked: true},
-                        taxable: false,
-                        inventoryQuantities: {availableQuantity: '.$request->inventory_quantities[0].', locationId: "gid://shopify/Location/11508449322"}
-                    }
-                ]
+                variants: variants: ['.$variants.']
             }){
                 product {
                     id
@@ -104,6 +95,24 @@ class productController extends Controller
         }
         
     }
+    public function setVariantProductQuery($request){
+        
+        if(isset($request->variant_title[0])){
+            $strQuery = [];
+            foreach($request->variant_title as $key=>$varianTitle){
+                $compareAtPrice = isset($request->compare_at_price[$key])?isset($request->compare_at_price[$key]): 0;
+                $strQuery[] = '{
+                    title: "'.$request->variant_title[$key].'",
+                    price: "'.$request->price[$key].'",
+                    compareAtPrice: "'.$compareAtPrice.'",
+                    inventoryItem: {cost: "'.$request->price[$key].'", tracked: true},
+                    taxable: false,
+                    inventoryQuantities: {availableQuantity: '.$request->inventory_quantities[$key].', locationId: "gid://shopify/Location/11508449322"}
+                    }';
+            }
+            return implode(",", $strQuery);
+        }
+    }
     public function updateProduct(Request $request, $handle){
         $request->validate([
             'title' => 'required|string|min:5',
@@ -114,7 +123,7 @@ class productController extends Controller
             'description' => 'required|string|min:5',
         ]);
         $id = $request->id;
-        $compareAtPrice = isset($request->compare_at_price[0])?isset($request->compare_at_price[0]): 0;
+        $variants = $this->setVariantProductQuery($request);
         $query = 'productUpdate(input: { 
             id: "'.$id.'",
             title: "'.$request->title.'", 
@@ -123,16 +132,7 @@ class productController extends Controller
             tags: "'.$request->tags.'",
             status: '.$request->status.',
             descriptionHtml: "'.addslashes($request->description).'",
-            variants: [
-                {
-                    title: "'.$request->variant_title[0].'",
-                    price: "'.$request->price[0].'",
-                    compareAtPrice: "'.$compareAtPrice.'",
-                    inventoryItem: {cost: "'.$request->price[0].'", tracked: true},
-                    taxable: false,
-                    inventoryQuantities: {availableQuantity: '.$request->inventory_quantities[0].', locationId: "gid://shopify/Location/11508449322"}
-                }
-            ]
+            variants: ['.$variants.']
         }){
             product {
                 id
