@@ -1,3 +1,28 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.btn{
+    @apply inline-flex items-center  px-2 py-1 text-xs rounded-md uppercase tracking-tighter;
+}
+.btn svg{
+    @apply w-4 h-4;
+}
+.btn-primary{
+    @apply bg-slate-400 text-white hover:bg-slate-500;
+}
+.btn-edit{
+    @apply bg-indigo-400 text-white hover:bg-indigo-500;
+}
+.btn-delete{
+    @apply bg-red-500 text-white hover:bg-red-600;
+}
+.form-group{
+    @apply w-full mb-2 flex flex-col text-slate-700;
+}
+.form-group label{
+    @apply font-bold;
+}
+.form-input{
+    @apply border border-slate-200 py-1 px-3 outline-none rounded-md shadow focus:ring-4 focus:ring-slate-200 focus:border-slate-400 my-1;
+}
